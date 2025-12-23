@@ -1,1 +1,8 @@
+# Thư mục môi trường ảo
 .venvDocuSign/
+
+# Cấu hình debug
+.vscode/
+
+# Tệp tin chứa access token
+docusign_tokens.json
