@@ -66,7 +66,11 @@ https://account-d.docusign.com/oauth/auth?response_type=code&scope=signature&cli
 Ta thay thế các đoạn `Client_id` (integration code), `redirect_url` (redirect url) và `login_hint` (email login) tương ứng.  
 
 Sau khi truy cập url này:  
-Nếu là lần đầu thì nó sẽ bắt đăng nhập tài khoản `DocuSign`. và sau đó nó sẽ chuyển hướng sang 1 trang mới có code như sau:  
+Nếu là lần đầu thì nó sẽ bắt đăng nhập tài khoản `DocuSign`.  
+
+![image](Github_Img/login_request_authorization_code.png)  
+
+Và sau đó nó sẽ chuyển hướng sang 1 trang mới có code như sau:  
 
 ![image](Github_Img/get_authorization_code.png)
 
@@ -81,7 +85,7 @@ eyJ0eXAiOiJNVCIsImFsZyI6IlJTMjU2Iiwia2lkIjoiNjgxODVmZjEtNGU1MS00Y2U5LWFmMWMtNjg5
 
 Khi đã có `Authorization code` thì ta đã có thể lấy `Access token` như sau:  
 
-![image](Github_Img//request_access_token.png)  
+![image](Github_Img/request_access_token.png)  
 
 ```
 curl --header "Authorization: Basic BASE64_COMBINATION_OF_INTEGRATION_AND_SECRET_KEYS"
@@ -89,3 +93,19 @@ curl --header "Authorization: Basic BASE64_COMBINATION_OF_INTEGRATION_AND_SECRET
 --request POST https://account-d.docusign.com/oauth/token
 ```
 Có 1 lưu ý là `Authorization` của đoạn mã này có định dạng `Basic BASE64_COMBINATION_OF_INTEGRATION_AND_SECRET_KEYS` nghĩa là ta cần ghép nối mã `Integration và Secret Key` thành định dạng `Base 64`.  
+
+Tham khảo đoạn code [Tại đây](src/access_token/get_access_token.py)
+
+# IV. Tài liệu cần ký
+
+Tài liệu cần ký gửi qua bằng API nên sử dụng phương pháp `anchor text` thay vì `anchor position`. Có nghĩa là ta sẽ đặt 1 dòng văn bản, đánh dấu cho việc là chữ ký sẽ nằm ở đây, thay vì ta đặt bằng tạo độ x, y tuyệt đối. Khi thay đổi kích thước hay khác thì tọa độ sẽ không còn chính xác như văn bản nữa.  
+Ví dụ tôi có ô ký như sau và cần người dùng ký vào đó, thời gian ký ngay bên dưới:  
+
+![image](Github_Img/anchor_signhere.png)  
+
+Ta có thể thấy 2 doàng chữ `/signhere1/` và `/date/`. Đây sẽ là 2 vị trí mà ta sẽ đặt chữ ký và thời gian ký vào đây. Lưu ý chữ ký sẽ bắt đầu tại tọa độ của 2 văn bản này, nó sẽ bắt đầu tại `/`, vì vậy ta nên để nó nằm phía dưới ô kí, góc bên trái để khi chèn chữ ký vào nó sẽ bao phủ hết ô ký, không bị lệch ra ngoài hay không cân đối.  
+Và để trông chuyên nghiệp hơn, ta sẽ ẩn đi 2 văn bản đánh dấu này bằng cách chọn cho nó màu trắng.  
+
+![image](Github_Img/anchor_signhere_white_color.png)  
+
+Như vậy bây giờ sẽ không ai nhận ra được ô ký đã được đánh dấu, nhưng khi gửi lên DocuSign thì nó vẫn nhận ra đâu là nơi cần điền chữ ký vào. Mặc định thời gian ký sẽ được chèn vào và người ký không thể chỉnh sửa hay làm gì khác.  
