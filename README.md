@@ -109,3 +109,79 @@ Và để trông chuyên nghiệp hơn, ta sẽ ẩn đi 2 văn bản đánh d�
 ![image](Github_Img/anchor_signhere_white_color.png)  
 
 Như vậy bây giờ sẽ không ai nhận ra được ô ký đã được đánh dấu, nhưng khi gửi lên DocuSign thì nó vẫn nhận ra đâu là nơi cần điền chữ ký vào. Mặc định thời gian ký sẽ được chèn vào và người ký không thể chỉnh sửa hay làm gì khác.  
+
+# V. Goi API bằng ngôn ngữ C#
+
+Tương tự đối với C# thì ta cần tải thư viện `DocuSign.eSign` từ Nuget để mã có thể chạy được. Mình đã đóng gói đoạn code xử lý thành 1 class [tại đây](c_sharp/DocuSignService.cs). Mình đặt tên cho nó là `DocuSignService`.  
+
+Các vị trí cần gửi báo cáo tới người phê duyệt thì ta khai báo như sau:  
+```C#
+// DocuSignService
+private DocuSignService _docusign;
+
+private async Task EnsureDocuSignInitializedAsync()
+{
+    if (_docusign != null) return;
+
+    _docusign = new DocuSignService(
+        clientId: "67de494f-93dc-45fb-ae27-08e038247d2c",
+        clientSecret: "17e02092-9d32-4da0-8636-a7bc8632b550",
+        redirectUri: "http://localhost:3000/ds/callback",  // nhớ đăng ký trong Apps and Keys
+        scopes: "signature offline_access",
+        tokenJsonPath: Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "docusign_tokens.json"),
+        loginHintEmail: "tvc_adm_it@terumo.co.jp"
+    );
+
+    // Init: nếu chưa có token.json sẽ tự mở browser xin consent
+    await _docusign.InitializeAsync();
+}
+```
+Đầu tiên ta khai báo biến cho class `DocuSignService` và tạo 1 hàm khởi tạo để lấy token từ DocuSign.  
+Sau đó bất kỳ thao tác nào với 1 tệp báo cáo thì ta đều cần chuyển nó về dạng `bytes` thì mới có thể gửi nó tới DocuSign. Ví dụ tôi đang thao tác với `XtraReport`, 1 dạng báo cáo trong C#, bạn cũng có thể thay thế nó bằng đường dẫn tới 1 tệp PDF bất kỳ, đọc tệp PDF đó và chuyển đổi nó thành dạng `bytes` và đặt tên cho PDF đã chuyển đổi có tên `pdfBytes` để tương đồng với hàm bên dưới là được.  
+```C#
+private async Task SendForESignatureAsync(XtraReport report, IWin32Window owner)
+{
+    // Khởi tạo docuSign service
+    await EnsureDocuSignInitializedAsync();
+
+    var signerName = "Nguyễn Đức Quân";
+    var signerEmail = "nguyenducquan2001@gmail.com";
+
+    // Export PDF sang dạng byte để gửi DocuSign
+    byte[] pdfBytes;
+    using (var ms = new MemoryStream())
+    {
+        report.ExportToPdf(ms);
+        pdfBytes = ms.ToArray();
+    }
+
+    // Gửi DocuSign
+    try
+    {
+        // Anchor phải khớp text đã chèn trong report (Khu vực yêu cầu ký)
+        string anchor = "/signhere1/";
+
+        var envelopeId = await _docusign.SendPdfForSignatureViaEmailAsync(
+            pdfBytes: pdfBytes,
+            documentName: "Report.pdf",
+            signerName: signerName,
+            signerEmail: signerEmail,
+            anchorString: anchor
+        );
+
+        MessageBox.Show(owner,
+            $"ĐÃ gửi báo cáo tới người ký.\nMã EnvelopeId của báo cáo: {envelopeId}",
+            "DocuSign",
+            MessageBoxButtons.OK,
+            MessageBoxIcon.Information);
+
+        // Lưu envelopeId vào CSDL nếu cần hoặc xử lý tiếp
+    }
+    catch (Exception ex)
+    {
+        MessageBox.Show(owner, ex.ToString(), "Gửi báo cáo tới DocuSign thất bại",
+            MessageBoxButtons.OK, MessageBoxIcon.Error);
+    }
+}
+```
+Với mỗi `XtraReport` được gọi tới hàm trên thì tôi sẽ gửi nó tới người nhận và địa chỉ email đã được thiết lập ở bên trên. 
