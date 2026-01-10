@@ -396,7 +396,7 @@ public sealed class DocuSignService
             AnchorXOffset = "0",           // lệch X (px) nếu cần
             AnchorYOffset = "0"            // lệch Y (px) nếu cần
         };
-
+        // Vị trí lưu ngày ký tự động
         var dateSign = new DateSigned
         {
             AnchorString = "/date/",

@@ -112,7 +112,7 @@ Như vậy bây giờ sẽ không ai nhận ra được ô ký đã được đ�
 
 # V. Goi API bằng ngôn ngữ C#
 
-Tương tự đối với C# thì ta cần tải thư viện `DocuSign.eSign` từ Nuget để mã có thể chạy được. Mình đã đóng gói đoạn code xử lý thành 1 class [tại đây](c_sharp/DocuSignService.cs). Mình đặt tên cho nó là `DocuSignService`.  
+Tương tự đối với C# thì ta cần tải thư viện `DocuSign.eSign` từ Nuget để mã có thể chạy được. Mình đã đóng gói đoạn code xử lý thành 1 class [tại đây](C_sharp/DocuSignService.cs). Mình đặt tên cho nó là `DocuSignService`.  
 
 Các vị trí cần gửi báo cáo tới người phê duyệt thì ta khai báo như sau:  
 ```C#
@@ -124,12 +124,12 @@ private async Task EnsureDocuSignInitializedAsync()
     if (_docusign != null) return;
 
     _docusign = new DocuSignService(
-        clientId: "67de494f-93dc-45fb-ae27-08e038247d2c",
-        clientSecret: "17e02092-9d32-4da0-8636-a7bc8632b550",
-        redirectUri: "http://localhost:3000/ds/callback",  // nhớ đăng ký trong Apps and Keys
+        clientId: "67de494f-93dc-45fb-ae27-08e038247d2c",                                            // Client id của app trong DocuSign
+        clientSecret: "17e02092-9d32-4da0-8636-a7bc8632b550",                                        // Client Secret của app trong DocuSign
+        redirectUri: "http://localhost:3000/ds/callback",                                            // nhớ đăng ký trong Apps and Keys, và sử dụng http thay vì htpps
         scopes: "signature offline_access",
-        tokenJsonPath: Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "docusign_tokens.json"),
-        loginHintEmail: "tvc_adm_it@terumo.co.jp"
+        tokenJsonPath: Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "docusign_tokens.json"),  // Nơi lưu trữ access token sử dụng cho lần sau thay vì cứ request mãi
+        loginHintEmail: "tvc_adm_it@terumo.co.jp"                                                    // Địa chỉ email dùng để gợi ý đăng nhập khi lấy access token
     );
 
     // Init: nếu chưa có token.json sẽ tự mở browser xin consent
